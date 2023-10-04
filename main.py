@@ -68,7 +68,7 @@ async def print_order(message: types.Message):
     except TypeError:
         await message.answer("error")
 
-`
+
 @dp.message(F.text == "Уйти с очереди")
 async def out_of_order(message: types.Message):
     try:
