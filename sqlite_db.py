@@ -1,3 +1,5 @@
+import dataclasses
+import datetime
 import sqlite3 as sq
 
 
@@ -8,14 +10,14 @@ async def db_connect():
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash(tg_username TEXT, name TEXT, time_index int)")
+    cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash(tg_username TEXT, name TEXT, time_index int, day int)")
     db.commit()
 
 
-async def create_new_record(tg_username, user_name, time_index):
+async def create_new_record(tg_username, user_name, time_index, day=int(datetime.datetime.now().timestamp())):
     global cur, db
     await db_connect()
-    cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?)", (tg_username, user_name, time_index))
+    cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?)", (tg_username, user_name, time_index, day))
     db.commit()
 
 
@@ -33,7 +35,8 @@ async def check_user(user_id):
     for id in users_id:
         if str(id[0]) == str(user_id):
             return 1
-    else: return 0
+    else:
+        return 0
 
 
 async def delete_from_order(tg_username):
@@ -63,4 +66,15 @@ async def is_in_order(tg_username):
     for un in users_un:
         if str(un[0]) == str(tg_username):
             return 1
-    else: return 0
+    else:
+        return 0
+
+
+
+
+async
+
+async def get_busy_times(day):
+    global cur, db
+    await db_connect()
+    return filter(lambda , cur.execute("SELECT time_index FROM order_of_wash WHERE day = ", day).fetchall())
