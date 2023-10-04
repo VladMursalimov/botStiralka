@@ -1,188 +1,386 @@
 import asyncio
-import datetime
 import logging
-import os
 import sys
-from os import getenv
 
-from aiogram.filters.callback_data import CallbackData
-from aiogram.fsm.context import FSMContext
-
-import data
-
-import keybuttons
-import sqlite_db
-from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, CallbackQuery
-from aiogram import Bot, Dispatcher, Router, types, F
-from aiogram.enums import ParseMode
+from keyboards.request_status import *
+from sqlite_db import *
+from aiogram import Bot, Dispatcher, types, F
+# ------------------
 from aiogram.filters import CommandStart
+from aiogram.filters import Command
+from aiogram.filters import CommandObject
+# ------------------
+from aiogram.types import Message
+# ----------------------
+# from config import config
+from data import config
+# import keyboards
+from keyboards.main_menu import *
+from keyboards.admin_menu import *
+from keyboards.admin_commands import *
+from keyboards.block_btn import *
+# --------------
 
-from states import GettingRoomNumber
 
-# Bot token can be obtained via https://t.me/BotFather
-TOKEN = os.getenv("bot_token")
-router = Router()
-# All handlers should be attached to the Router (or Dispatcher)
+
 dp = Dispatcher()
 
-
-@dp.message(F.text == "Запись")
-async def take_part_in_order(message: types.Message):
+@dp.message(F.text == main_captions[0] or F.text == main_admin_captions[0])
+async def new_in_order(message: Message):
     try:
-        is_registred = await sqlite_db.check_user(message.from_user.id)
-        in_order = await sqlite_db.is_in_order(message.from_user.username)
+        # проверка на регистрацию
+        is_registred = await check_user(message.from_user.id)
+        # проверка на очередь
+        in_order = await is_in_order(message.from_user.username)
+        # если ты зареган и не в очереди
         if is_registred and not in_order:
-            await message.answer("выберите день", reply_markup=keybuttons.day_inline_buttons.as_markup())
+            # добавляем тебя в очередь
+            await create_new_record(message.from_user.username,
+                                    message.from_user.first_name, message.date)
+            # выводим очередь
+            await print_order(message)
+        # уже в очереди
         elif in_order:
             await message.answer("ты уже в очереди")
+        # нет ни в очереди, ни в базе
         else:
             await message.answer("Вас нет в базе. Зарегайся")
     except TypeError:
-        await message.answer("error order")
+        await message.answer("Ошибка в записи, обратитесь к админу")
 
 
-def get_current_day():
-    return datetime.datetime.now().day
-
-
-@dp.callback_query(keybuttons.ChoseDayCallbackData.filter())
-async def show_free_times(query: CallbackQuery, callback_data: keybuttons.ChoseDayCallbackData):
-    busy_times = await sqlite_db.get_busy_times(get_current_day() + callback_data.day)
-    await query.message.answer("выберите время",
-                               reply_markup=keybuttons.get_times_markup(day=callback_data.day,
-                                                                        busy_times=busy_times).as_markup())
-    await query.answer()
-
-
-@dp.message(GettingRoomNumber.getting_number)
-async def register_with_room(message: types.Message, state: FSMContext):
+# РЕГИСТРАЦИЯ---------------------------------
+@dp.message(F.text == main_captions[2] or F.text == main_admin_captions[2])
+async def register(message: Message):
     try:
-        is_registred = await sqlite_db.check_user(message.from_user.id)
-        if is_registred:
-            await message.answer("ты уже зареган")
+        is_base_user = await check_user(message.from_user.id)
+        is_send_request = await check_user_request(message.from_user.id)
+        if is_send_request:
+            await message.answer("Ты уже подал заявку")
+        elif is_base_user:
+            await message.answer("Ты зареган")
         else:
-            await sqlite_db.register_new_user(message.from_user.id, message.from_user.username, message.text)
-            await message.answer("ты успешно зареган")
-
+            await get_key(message)
     except TypeError:
-        await message.answer("error register")
-    await state.clear()
+        await message.answer("Ошибка регистрации, обратитесь к админу")
 
 
-@dp.message(F.text == "Регистрация")
-async def register(message: types.Message):
-    try:
-        is_registred = await sqlite_db.check_user(message.from_user.id)
-        if is_registred:
-            await message.answer("ты уже зареган")
-        else:
-            await sqlite_db.register_new_user(message.from_user.id, message.from_user.username, "0.0.0")
-            await message.answer("ты успешно зареган")
+async def get_key(message: Message):
+    await message.answer(f"Выбери блок", reply_markup=block_btn)
+    return 1
 
-    except TypeError:
-        await message.answer("error register")
+
+@dp.message(F.text == block_btn_captions[0])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.1",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[1])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.2",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[2])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.3",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[3])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.4",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[4])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.5",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[5])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.6",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[6])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.7",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+@dp.message(F.text == block_btn_captions[7])
+async def register_block_0(message: Message):
+    if get_key(message):
+        await add_request(message.from_user.id,
+                          message.from_user.username,
+                          message.from_user.first_name,
+                          message.from_user.last_name,
+                          "12.8",
+                          message.date)
+        await message.answer("Заявка отправлена")
+
+
+# ---------------------------------
+# @dp.message(F.text == main_captions[2] or F.text == main_admin_captions[2])
+# async def register(message: Message):
+#     try:
+#         is_registred = await check_user(message.from_user.id)
+#         if is_registred:
+#             await message.answer("Ты уже зарегистрировался")
+#         else:
+#             await register_new_user(message.from_user.id,
+#                                     message.from_user.username, "12.4")
+#             await message.answer("Ты успешно зарегистрировался")
+#
+#     except TypeError:
+#         await message.answer("Ошибка регистрации, обратитесь к админу")
 
 
 def order_to_string(order):
     strings = []
-    for row in order:
-        tg_username, tg_name, time_index = row
-        strings.append(f"@{tg_username} {tg_name} {data.times[time_index]}")
+    for index, row in enumerate(order):
+        tg_username, tg_name, time = row
+        strings.append(f"{index + 1}) @{tg_username} {tg_name} {time}")
 
     return '\n'.join(strings)
 
 
-@dp.message(F.text == "Очередь")
-async def print_order(message: types.Message):
+@dp.message(F.text == main_captions[1] or F.text == main_admin_captions[1])
+async def print_order(message: Message):
     try:
-        order = await sqlite_db.get_order()
-        await message.answer(order_to_string(order))
+        order = order_to_string(await get_order())
+        if order:
+            await message.answer(order)
+        else:
+            await message.answer("Стиральная машина свободна")
+
     except TypeError:
-        await message.answer("error")
+        await message.answer("print_order error")
 
 
-@dp.message(F.text == "Уйти с очереди")
-async def out_of_order(message: types.Message):
+@dp.message(F.text == main_captions[3] or F.text == main_admin_captions[3])
+async def out_of_order(message: Message):
     try:
-        if await sqlite_db.is_in_order(message.from_user.username):
-            await sqlite_db.delete_from_order(message.from_user.username)
+        if await is_in_order(message.from_user.username):
+            await delete_from_order(message.from_user.username)
             await print_order(message)
         else:
-            await message.answer("вас нет в очереди")
+            await message.answer("Вас нет в очереди")
     except TypeError:
-        await message.answer("error")
+        await message.answer("out_of_order error")
 
 
-async def ask_to_block_number(message: types.Message, state: FSMContext):
-    await state.set_state(GettingRoomNumber.getting_number)
-
-    kb = [
-        [
-            types.KeyboardButton(text="отмена"),
-        ],
-    ]
-    await message.answer("Введите номер комнаты(например 12.4.3)",
-                         reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
+@dp.message(F.text == main_admin_captions[4])
+async def admin_panel(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            await message.answer("Панель Администратора", reply_markup=admin_commands)
+    except TypeError:
+        await message.answer("admin_panel - error")
 
 
-@dp.message(F.text == "отмена")
-async def cancel(message: types.Message, state: FSMContext):
-    await state.clear()
-    await send_welcome(message, state)
+# ---- MANAGE ADMIN--------
+def request_to_string(request):
+    for row in request:
+        return row
 
+
+# Заявки
+@dp.message(F.text == admin_commands_captions[0])
+async def admin_request(message: Message):
+    # try:
+    if message.from_user.id == int(config.ADMIN_ID):
+        request = await get_requests()
+        requests_string = request_to_string(request)
+        if requests_string == None:
+            await message.answer('Заявок нет')
+        else:
+            print('------------>', requests_string)
+            requests_string_1 = ''
+            for i in requests_string:
+                if i != None:
+                    requests_string_1 += ' ' + str(i)
+            await message.answer(f'{1}) ' + requests_string_1,
+                                 reply_markup=request_status)
+
+
+# except TypeError:
+#     await message.answer("admin_request - error!!!")
+
+
+# Создать объявление
+@dp.message(F.text == admin_commands_captions[1])
+async def admin_create_advertisement(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            await message.answer("Напишите объявление: не забудь добавить /admin_ad")
+    except TypeError:
+        await message.answer("admin_create_advertisement - error!!!")
+
+
+# Отправить объявление
+@dp.message(Command("admin_ad"))
+async def admin_send_ad(message: types.Message, command: CommandObject):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            if command.args:
+                users = await get_user()
+                for i in users:
+                    print(i)
+                    await bot.send_message(chat_id=i[0],
+                                           text=f"Объявление:\n{command.args}")
+            else:
+                await message.answer("Пожалуйста, укажи объявление после команды /admin_ad!")
+
+    except TypeError:
+        await message.answer("admin_send_ad - error!!!")
+
+
+# База студентов
+@dp.message(F.text == admin_commands_captions[5])
+async def admin_base_users(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            users = await get_user()
+            for indx, i in enumerate(users):
+                tg_id, tg_name, block = i
+                await message.answer(f"{indx}) @{tg_name} {block}")
+
+    except TypeError:
+        await message.answer("admin_send_ad - error!!!")
+
+
+# Одобрить
+@dp.message(F.text == request_status_captions[0])
+async def accept_request(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            request = request_to_string(await get_requests())
+            if request:
+                tg_id, tg_username, user_name, user_lastname, block, time = request
+                await register_new_user(tg_id, tg_username, block)
+                await delete_from_requests(tg_username)
+                await message.answer("Панель Администратора", reply_markup=admin_commands)
+            else:
+                print('очередь пуста')
+    except TypeError:
+        await message.answer('accept_request error')
+
+
+# Отклонить
+@dp.message(F.text == request_status_captions[1])
+async def fatal_request(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            request = request_to_string(await get_requests())
+            if request:
+                tg_id, tg_username, user_name, user_lastname, block, time = request
+                await delete_from_requests(tg_username)
+                await message.answer("Панель Администратора", reply_markup=admin_commands)
+            else:
+                print('очередь пуста')
+    except TypeError:
+        await message.answer("fatal_request error")
+
+
+# Назад к панели админа
+@dp.message(F.text == request_status_captions[2])
+async def admin_back_to_admin_commands(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            await message.answer("Панель Администратора", reply_markup=admin_commands)
+    except TypeError:
+        await message.answer("admin_back_to_admin_commands error")
+
+
+# Назад в глаавное меню
+@dp.message(F.text == admin_commands_captions[4])
+async def admin_back_to_main_menu(message: Message):
+    try:
+        if message.from_user.id == int(config.ADMIN_ID):
+            await message.answer("Выберите параметры", reply_markup=admin_menu)
+    except TypeError:
+        await message.answer("admin_back_to_main_menu")
+
+
+# --------------------------------
 
 @dp.message(CommandStart())
-async def send_welcome(message: types.Message, state: FSMContext):
-    is_registred = await sqlite_db.check_user(message.from_user.id)
-
-    if not is_registred:
-        await ask_to_block_number(message, state)
-        return
-
-    kb = [
-        [
-            types.KeyboardButton(text="Запись"),
-            types.KeyboardButton(text="Очередь"),
-            types.KeyboardButton(text="Регистрация"),
-            types.KeyboardButton(text="Уйти с очереди")
-        ],
-    ]
-
-    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
-    await message.answer("привет", reply_markup=keyboard)
-
-
-@dp.callback_query(keybuttons.SetTimeCallback.filter())
-async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallback):
-    message = query.message
-    await sqlite_db.create_new_record(message.chat.username, message.chat.first_name, callback_data.day)
-    await query.message.answer(f"Вы записаны на {data.times[callback_data.time_index]}")
-    await print_order(message)
+async def send_welcome(message: Message):
+    if message.from_user.id == int(config.ADMIN_ID):
+        await message.answer(f'Вы авторизовались как администратор!', reply_markup=admin_menu)
+    else:
+        await message.answer("Добро пожаловать в бота для записи на стирку", reply_markup=main_menu)
 
 
 @dp.message()
-async def echo_handler(message: types.Message) -> None:
-    """
-    Handler will forward receive a message back to the sender
-
-    By default, message handler will handle all message types (like a text, photo, sticker etc.)
-    """
+async def echo_handler(message: Message):
     try:
-        # Send a copy of the received message
-        await message.answer("а??")
+        await message.answer("a??")
     except TypeError:
-        # But not all the types is supported to be copied so need to handle it
         await message.answer("Nice try!")
 
 
-async def main() -> None:
-    # Initialize Bot instance with a default parse mode which will be passed to all API calls
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+async def main():
+    global bot
+    # Initialize Bot instance with a default parse mode
+    # which will be passed to all API calls
+    bot = Bot(token=config.BOT_TOKEN)
+
+
+
     # And the run events dispatching
     await dp.start_polling(bot)
-    await sqlite_db.db_connect()
+    await db_connect()
 
 
 if __name__ == "__main__":
+
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
