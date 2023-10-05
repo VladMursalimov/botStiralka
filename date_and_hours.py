@@ -4,7 +4,6 @@ import data
 
 from zoneinfo import ZoneInfo
 
-import sqlite_db
 
 time_zone = ZoneInfo('Europe/Moscow')
 
