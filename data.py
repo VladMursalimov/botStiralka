@@ -14,7 +14,7 @@ times = ['с 0:00 до 2:00',
          'с 22:00 до 24:00', ]
 
 times_hours = [
-    i for i in range(0, 24, 2)
+    i for i in range(2, 24, 2)
 ]
 
 day_deltas = [
