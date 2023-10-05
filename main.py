@@ -14,7 +14,7 @@ from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 
-from date_and_hours import get_current_hour, plus_day_to_current_time
+from date_and_hours import get_current_hour, plus_day_to_current_time, get_busy_times_by_hour
 from states import GettingRoomNumber
 from strings import order_to_string
 from aiogram.client.session.aiohttp import AiohttpSession
@@ -45,13 +45,6 @@ async def take_part_in_order(message: types.Message):
     except TypeError:
         await message.answer("error order")
 
-
-def get_busy_times_by_hour(hour):
-    busy_times = set()
-    for i in range(len(data.times_hours)):
-        if hour >= data.times_hours[i]:
-            busy_times.add(i)
-    return busy_times
 
 
 @dp.callback_query(keybuttons.ChoseDayCallbackData.filter())
