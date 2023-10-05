@@ -1,13 +1,10 @@
 import asyncio
-import datetime
 import logging
 import os
 import sys
-from os import getenv
 
 import aiogram.enums
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.markdown import hlink
 
 import data
 
@@ -18,10 +15,15 @@ from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 
-from date_and_hours import get_current_hour, get_current_datetime, plus_day_to_current_time
+from date_and_hours import get_current_hour, plus_day_to_current_time
 from states import GettingRoomNumber
 from strings import order_to_string
+from aiogram.client.session.aiohttp import AiohttpSession
 
+# Bot token can be obtained via https://t.me/BotFather
+
+
+session = AiohttpSession(proxy="http://proxy.server:3128")
 # Bot token can be obtained via https://t.me/BotFather
 TOKEN = os.getenv("bot_token")
 router = Router()
@@ -192,7 +194,7 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 
