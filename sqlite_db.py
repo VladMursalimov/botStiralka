@@ -79,7 +79,7 @@ async def is_in_order(tg_username):
 async def get_busy_times(day: int):
     global cur, db
     await db_connect()
-    print("day=", day)
     busy_times = list(map(lambda x: x[0], cur.execute(
         f"SELECT time_index FROM order_of_wash WHERE day = {day}").fetchall()))
     return set(busy_times)
+

@@ -14,7 +14,7 @@ from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 
-from date_and_hours import get_current_hour, plus_day_to_current_time, get_busy_times_by_hour
+from date_and_hours import *
 from states import GettingRoomNumber
 from strings import order_to_string
 
@@ -47,11 +47,13 @@ async def take_part_in_order(message: types.Message):
 @dp.callback_query(keybuttons.ChoseDayCallbackData.filter())
 async def show_free_times(query: CallbackQuery, callback_data: keybuttons.ChoseDayCallbackData):
     busy_times = await sqlite_db.get_busy_times(plus_day_to_current_time(callback_data.day_delta))
+
+    busy_times = busy_times.union(get_busy_times_after_hour(busy_times))
     if callback_data.day_delta == 0:
         busy_times = busy_times.union(get_busy_times_by_hour(get_current_hour()))
-    await query.message.answer(f"выберите время на {data.day_deltas[callback_data.day_delta].lower()}",
-                               reply_markup=keybuttons.get_times_markup(day=callback_data.day_delta,
-                                                                        busy_times=busy_times).as_markup())
+    await query.message.edit_text(f"выберите время на {data.day_deltas[callback_data.day_delta].lower()}",
+                                  reply_markup=keybuttons.get_times_markup(day=callback_data.day_delta,
+                                                                           busy_times=busy_times).as_markup())
     await query.answer()
 
 
@@ -166,12 +168,17 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.callback_query(keybuttons.SetTimeCallback.filter())
 async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallback):
     message = query.message
+    if await sqlite_db.is_in_order(message.chat.username):
+        await message.answer("ты уже записан")
+        return None
+
     await sqlite_db.create_new_record(tg_username=message.chat.username,
                                       user_name=message.chat.first_name,
                                       day=plus_day_to_current_time(callback_data.day),
                                       time_index=callback_data.time_index)
     await query.message.answer(
         f"Вы записаны {data.day_deltas[callback_data.day]} {data.times[callback_data.time_index]}")
+    await message.delete()
     await query.answer()
 
 
