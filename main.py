@@ -32,7 +32,7 @@ dp = Dispatcher()
 async def take_part_in_order(message: types.Message):
     try:
         is_registred = await sqlite_db.check_user(message.from_user.id)
-        in_order = await sqlite_db.is_in_order(message.from_user.username, get_current_datetime().timestamp())
+        in_order = await sqlite_db.is_in_order(message.from_user.username, get_current_day())
         # in_order = False
         if is_registred and not in_order:
             await message.answer("выберите день", reply_markup=keybuttons.day_inline_buttons.as_markup())
