@@ -13,7 +13,7 @@ class SetTimeCallback(CallbackData, prefix="set_time"):
 
 def get_times_markup(day: int, busy_times):
     time_inline_buttons = InlineKeyboardBuilder()
-    for index in range(0, 12):
+    for index in range(len(data.times)):
         if index not in busy_times:
             time_inline_buttons.button(text=data.times[index],
                                        callback_data=SetTimeCallback(time_index=index, day=day).pack())

@@ -17,12 +17,10 @@ from aiogram.filters import CommandStart
 from date_and_hours import get_current_hour, plus_day_to_current_time, get_busy_times_by_hour
 from states import GettingRoomNumber
 from strings import order_to_string
-from aiogram.client.session.aiohttp import AiohttpSession
 
 # Bot token can be obtained via https://t.me/BotFather
 
 
-session = AiohttpSession(proxy="http://proxy.server:3128")
 # Bot token can be obtained via https://t.me/BotFather
 TOKEN = os.getenv("bot_token")
 router = Router()
@@ -34,8 +32,8 @@ dp = Dispatcher()
 async def take_part_in_order(message: types.Message):
     try:
         is_registred = await sqlite_db.check_user(message.from_user.id)
-        # in_order = await sqlite_db.is_in_order(message.from_user.username)
-        in_order = False
+        in_order = await sqlite_db.is_in_order(message.from_user.username)
+        # in_order = False
         if is_registred and not in_order:
             await message.answer("выберите день", reply_markup=keybuttons.day_inline_buttons.as_markup())
         elif in_order:
@@ -186,6 +184,9 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
+    from aiogram.client.session.aiohttp import AiohttpSession
+    session = AiohttpSession(proxy="http://proxy.server:3128")
+
     bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
