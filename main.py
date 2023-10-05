@@ -46,11 +46,11 @@ async def take_part_in_order(message: types.Message):
         await message.answer("error order")
 
 
-
 @dp.callback_query(keybuttons.ChoseDayCallbackData.filter())
 async def show_free_times(query: CallbackQuery, callback_data: keybuttons.ChoseDayCallbackData):
     busy_times = await sqlite_db.get_busy_times(plus_day_to_current_time(callback_data.day_delta))
-    busy_times = busy_times.union(get_busy_times_by_hour(get_current_hour()))
+    if callback_data.day_delta == 0:
+        busy_times = busy_times.union(get_busy_times_by_hour(get_current_hour()))
     await query.message.answer(f"выберите время на {data.day_deltas[callback_data.day_delta].lower()}",
                                reply_markup=keybuttons.get_times_markup(day=callback_data.day_delta,
                                                                         busy_times=busy_times).as_markup())
