@@ -1,8 +1,4 @@
-import dataclasses
-import datetime
 import sqlite3 as sq
-
-from data import times_hours
 
 
 async def db_connect():
