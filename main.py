@@ -32,7 +32,7 @@ dp = Dispatcher()
 async def take_part_in_order(message: types.Message):
     try:
         is_registred = await sqlite_db.check_user(message.from_user.id)
-        in_order = await sqlite_db.is_in_order(message.from_user.username)
+        in_order = await sqlite_db.is_in_order(message.from_user.username, get_current_datetime())
         # in_order = False
         if is_registred and not in_order:
             await message.answer("выберите день", reply_markup=keybuttons.day_inline_buttons.as_markup())
@@ -117,7 +117,7 @@ async def print_order(message: types.Message):
 @dp.message(F.text == "Уйти с очереди")
 async def out_of_order(message: types.Message):
     try:
-        if await sqlite_db.is_in_order(message.from_user.username):
+        if await sqlite_db.is_in_order(message.from_user.username, get_current_datetime()):
             await sqlite_db.delete_from_order(message.from_user.username)
             await print_order(message)
         else:
@@ -168,7 +168,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.callback_query(keybuttons.SetTimeCallback.filter())
 async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallback):
     message = query.message
-    if await sqlite_db.is_in_order(message.chat.username):
+    if await sqlite_db.is_in_order(message.chat.username, get_current_datetime()):
         await message.answer("ты уже записан")
         return None
 
