@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 
-import aiogram.enums
 from aiogram.fsm.context import FSMContext
 
 import data
@@ -113,7 +112,7 @@ async def print_order(message: types.Message):
                 is_busy = True
                 await message.answer(
                     f"{data.day_deltas[i]}\n" + order_to_string(order, message.from_user.username),
-                    parse_mode=aiogram.enums.ParseMode.HTML,
+                    parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True)
         if not is_busy:
             await message.answer("очередь пустая")
