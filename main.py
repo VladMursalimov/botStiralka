@@ -191,7 +191,10 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    import AiohttpSession
+    session = AiohttpSession(proxy="http://proxy.server:3128")
+
+    bot = Bot(TOKEN, session=session, session=parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 
