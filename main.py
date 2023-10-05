@@ -177,7 +177,7 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
                                       day=plus_day_to_current_time(callback_data.day),
                                       time_index=callback_data.time_index)
     await query.message.answer(
-        f"Вы записаны {data.day_deltas[callback_data.day]} {data.times[callback_data.time_index]}")
+        f"Вы записаны {data.day_deltas[callback_data.day].lower()} {data.times[callback_data.time_index]}")
     await message.delete()
     await query.answer()
 
