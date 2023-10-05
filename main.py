@@ -168,7 +168,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.callback_query(keybuttons.SetTimeCallback.filter())
 async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallback):
     message = query.message
-    if await sqlite_db.is_in_order(message.chat.username, get_current_datetime().timestamp()):
+    if await sqlite_db.is_in_order(message.chat.username, get_current_day()):
         await message.answer("ты уже записан")
         return None
 

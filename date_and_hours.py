@@ -6,7 +6,6 @@ from zoneinfo import ZoneInfo
 
 import sqlite_db
 
-
 time_zone = ZoneInfo('Europe/Moscow')
 
 
@@ -21,6 +20,10 @@ def get_current_hour():
 
 def get_current_week():
     return get_current_datetime().weekday()
+
+
+def get_current_day():
+    return int(get_current_datetime().timestamp())
 
 
 def get_current_datetime():
