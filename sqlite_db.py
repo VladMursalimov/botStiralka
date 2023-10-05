@@ -68,7 +68,7 @@ async def get_from_order(tg_username):
 async def is_in_order(tg_username, day):
     global cur, db
     await db_connect()
-    users_un = cur.execute("SELECT tg_username FROM order_of_wash WHERE day >= ?", day)
+    users_un = cur.execute(f"SELECT tg_username FROM order_of_wash WHERE day >= {day}")
     for un in users_un:
         if str(un[0]) == str(tg_username):
             return 1
