@@ -24,9 +24,10 @@ def get_times_markup(day: int, busy_times):
 
 
 class ChoseDayCallbackData(CallbackData, prefix="set_day"):
-    day: int
+    day_delta: int
 
 
 day_inline_buttons = InlineKeyboardBuilder()
-day_inline_buttons.button(text="Сегодня", callback_data=ChoseDayCallbackData(day=0))
-day_inline_buttons.button(text="Завтра", callback_data=ChoseDayCallbackData(day=1))
+
+for i, day in enumerate(data.day_deltas):
+    day_inline_buttons.button(text=day, callback_data=ChoseDayCallbackData(day_delta=i))

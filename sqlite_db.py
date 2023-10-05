@@ -2,6 +2,8 @@ import dataclasses
 import datetime
 import sqlite3 as sq
 
+from data import times_hours
+
 
 async def db_connect():
     global db, cur
@@ -10,11 +12,12 @@ async def db_connect():
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash(tg_username TEXT, name TEXT, time_index int, day int)")
+    cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash"
+                "(tg_username TEXT, name TEXT, time_index int, day int)")
     db.commit()
 
 
-async def create_new_record(tg_username, user_name, time_index, day=int(datetime.datetime.now().timestamp())):
+async def create_new_record(tg_username, user_name, time_index, day=0):
     global cur, db
     await db_connect()
     cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?)", (tg_username, user_name, time_index, day))
@@ -49,8 +52,15 @@ async def delete_from_order(tg_username):
 async def get_order():
     global cur, db
     await db_connect()
-    order = cur.execute("SELECT * FROM order_of_wash")
+    order = cur.execute("SELECT * FROM order_of_wash ORDER BY time_index + day + month")
     return order
+
+
+async def get_orger_for_day(day):
+    global cur, db
+    await db_connect()
+    order = cur.execute(f"SELECT * FROM order_of_wash WHERE day = {day} ORDER BY time_index")
+    return order.fetchall()
 
 
 async def get_from_order(tg_username):
@@ -70,11 +80,10 @@ async def is_in_order(tg_username):
         return 0
 
 
-
-
-async
-
-async def get_busy_times(day):
+async def get_busy_times(day: int):
     global cur, db
     await db_connect()
-    return filter(lambda , cur.execute("SELECT time_index FROM order_of_wash WHERE day = ", day).fetchall())
+    print("day=", day)
+    busy_times = list(map(lambda x: x[0], cur.execute(
+        f"SELECT time_index FROM order_of_wash WHERE day = {day}").fetchall()))
+    return set(busy_times)
