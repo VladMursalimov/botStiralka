@@ -3,7 +3,6 @@ import datetime
 import data
 
 from zoneinfo import ZoneInfo
-from datetime import datetime
 
 time_zone = ZoneInfo('Europe/Moscow')
 
