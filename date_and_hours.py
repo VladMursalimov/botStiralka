@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import sqlite_db
 
 
-# time_zone = ZoneInfo('Europe/Moscow')
+time_zone = ZoneInfo('Europe/Moscow')
 
 
 def plus_day_to_current_time(day):
@@ -24,7 +24,7 @@ def get_current_week():
 
 
 def get_current_datetime():
-    now = datetime.datetime.now().replace(second=0, microsecond=0, minute=0)
+    now = datetime.datetime.now(time_zone).replace(second=0, microsecond=0, minute=0)
     return now
 
 
