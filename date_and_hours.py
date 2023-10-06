@@ -9,7 +9,7 @@ time_zone = ZoneInfo('Europe/Moscow')
 
 
 def plus_day_to_current_time(day):
-    return int((datetime.timedelta(days=day, hours=0, microseconds=0, minutes=0, milliseconds=0) + get_current_datetime()).timestamp())
+    return int((datetime.timedelta(days=day, hours=0, microseconds=0, minutes=0, milliseconds=0) + get_current_datetime()).replace(hour=0, microsecond=0, minute=0).timestamp())
 
 
 def get_current_hour():
