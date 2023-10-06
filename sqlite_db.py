@@ -58,6 +58,7 @@ async def get_order():
 async def get_orger_for_day(day):
     global cur, db
     await db_connect()
+    print(datetime.datetime.fromtimestamp(day))
     order = cur.execute(f"SELECT * FROM order_of_wash WHERE day = {day} ORDER BY time_index")
     return order.fetchall()
 
