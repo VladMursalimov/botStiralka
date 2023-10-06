@@ -7,7 +7,7 @@ from strings import order_to_string
 async def db_connect():
     global db, cur
 
-    db = sq.connect("new.db")
+    db = sq.connect("new_network.db")
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
@@ -16,10 +16,17 @@ async def db_connect():
     db.commit()
 
 
-async def create_new_record(tg_username, user_name, time_index, day=0):
+async def add_column_tg_id_to_order_wash():
     global cur, db
     await db_connect()
-    cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?)", (tg_username, user_name, time_index, day))
+    cur.execute("ALTER TABLE order_of_wash ADD COLUMN tg_id")
+    db.commit()
+
+
+async def create_new_record(tg_username, user_name, time_index, day=0, tg_id=0):
+    global cur, db
+    await db_connect()
+    cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
     db.commit()
 
 
@@ -63,18 +70,18 @@ async def get_orger_for_day(day):
     return order.fetchall()
 
 
-async def get_from_order(tg_username):
+async def get_from_order(tg_id):
     global cur, db
     await db_connect()
-    return cur.execute("SELECT tg_username FROM order_of_wash WHERE tg_username = ?", (tg_username,))
+    return cur.execute("SELECT tg_username FROM order_of_wash WHERE tg_id = ?", (tg_id,))
 
 
-async def is_in_order(tg_username, day):
+async def is_in_order(tg_id, day):
     global cur, db
     await db_connect()
     users_un = cur.execute(f"SELECT tg_username FROM order_of_wash WHERE day >= {day}")
     for un in users_un:
-        if str(un[0]) == str(tg_username):
+        if str(un[0]) == str(tg_id):
             return 1
     else:
         return 0
@@ -96,7 +103,7 @@ async def clean_time():
         f"SELECT * FROM order_of_wash").fetchall()
     print(order_to_string(records, ""))
     for row in records:
-        tg_username, tg_name, time_index, day = row
+        tg_username, tg_name, time_index, day, tg_id = row
 
         new_day = datetime.datetime.fromtimestamp(day)
         print(new_day, tg_username, time_index)

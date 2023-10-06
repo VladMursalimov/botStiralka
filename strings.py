@@ -6,7 +6,7 @@ import data
 def order_to_string(order, current_user):
     strings = []
     for row in order:
-        tg_username, tg_name, time_index, day = row
+        tg_username, tg_name, time_index, day, tg_id = row
         if tg_username == current_user:
             strings.append(f'{hlink("ты", f"https://t.me/{tg_username}")} {data.times[time_index]}')
         else:

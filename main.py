@@ -33,7 +33,7 @@ dp = Dispatcher()
 async def take_part_in_order(message: types.Message):
     try:
         is_registred = await sqlite_db.check_user(message.from_user.id)
-        in_order = await sqlite_db.is_in_order(message.from_user.username, get_current_day())
+        in_order = await sqlite_db.is_in_order(message.from_user.id, get_current_day())
         # in_order = False
         if is_registred and not in_order:
             await message.answer("выберите день", reply_markup=keybuttons.day_inline_buttons.as_markup())
@@ -118,7 +118,7 @@ async def print_order(message: types.Message):
 @dp.message(F.text == "Уйти с очереди")
 async def out_of_order(message: types.Message):
     try:
-        if await sqlite_db.is_in_order(message.from_user.username, get_current_datetime().timestamp()):
+        if await sqlite_db.is_in_order(message.from_user.id, get_current_datetime().timestamp()):
             await sqlite_db.delete_from_order(message.from_user.username)
             await print_order(message)
         else:
@@ -169,14 +169,13 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.callback_query(keybuttons.SetTimeCallback.filter())
 async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallback):
     message = query.message
-    if await sqlite_db.is_in_order(message.chat.username, get_current_day()):
+    if await sqlite_db.is_in_order(message.chat.id, get_current_day()):
         await message.answer("ты уже записан")
         return None
 
-    await sqlite_db.create_new_record(tg_username=message.chat.username,
-                                      user_name=message.chat.first_name,
-                                      day=plus_day_to_current_time(callback_data.day),
-                                      time_index=callback_data.time_index)
+    await sqlite_db.create_new_record(tg_username=message.chat.username, user_name=message.chat.first_name,
+                                      time_index=callback_data.time_index,
+                                      day=plus_day_to_current_time(callback_data.day), tg_id=message.chat.id)
     await query.message.answer(
         f"Вы записаны {data.day_deltas[callback_data.day].lower()} {data.times[callback_data.time_index]}")
     await message.delete()
@@ -192,10 +191,10 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
-    from aiogram.client.session.aiohttp import AiohttpSession
-    session = AiohttpSession(proxy="http://proxy.server:3128")
+    # from aiogram.client.session.aiohttp import AiohttpSession
+    # session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
-    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, session=None, parse_mode=ParseMode.HTML)
     await sqlite_db.clean_time()
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
