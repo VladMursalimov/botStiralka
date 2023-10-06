@@ -119,7 +119,7 @@ async def print_order(message: types.Message):
 async def out_of_order(message: types.Message):
     try:
         if await sqlite_db.is_in_order(message.from_user.id, get_current_datetime().timestamp()):
-            await sqlite_db.delete_from_order(message.from_user.username)
+            await sqlite_db.delete_from_order(message.from_user.id)
             await print_order(message)
         else:
             await message.answer("вас нет в очереди")
@@ -129,14 +129,7 @@ async def out_of_order(message: types.Message):
 
 async def ask_to_block_number(message: types.Message, state: FSMContext):
     await state.set_state(GettingRoomNumber.getting_number)
-
-    kb = [
-        [
-            types.KeyboardButton(text="отмена"),
-        ],
-    ]
-    await message.answer("Выберите номер комнаты(например 12.4.3)",
-                         reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
+    await message.answer("Выберите номер комнаты(например 12.4.3)")
 
 
 @dp.message(F.text == "отмена")
@@ -195,7 +188,7 @@ async def main() -> None:
     session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
     bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
-    await sqlite_db.clean_time()
+    # bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 
