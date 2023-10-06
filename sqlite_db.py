@@ -7,7 +7,7 @@ from strings import order_to_string
 async def db_connect():
     global db, cur
 
-    db = sq.connect("new_network.db")
+    db = sq.connect("new.db")
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
