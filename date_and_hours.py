@@ -27,6 +27,7 @@ def get_current_day():
 
 def get_current_datetime():
     now = datetime.datetime.now(time_zone).replace(second=0, microsecond=0, minute=0)
+    # now = datetime.datetime.now().replace(second=0, microsecond=0, minute=0, hour=0)
     return now
 
 

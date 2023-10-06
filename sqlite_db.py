@@ -1,4 +1,7 @@
+import datetime
 import sqlite3 as sq
+
+from strings import order_to_string
 
 
 async def db_connect():
@@ -83,3 +86,20 @@ async def get_busy_times(day: int):
         f"SELECT time_index FROM order_of_wash WHERE day = {day}").fetchall()))
     return set(busy_times)
 
+
+async def clean_time():
+    global cur, db
+    await db_connect()
+    print("!23")
+    records = cur.execute(
+        f"SELECT * FROM order_of_wash").fetchall()
+    print(order_to_string(records, ""))
+    for row in records:
+        tg_username, tg_name, time_index, day = row
+
+        new_day = datetime.datetime.fromtimestamp(day)
+        print(new_day, tg_username, time_index)
+        new_day = new_day.replace(hour=0)
+        print(int(new_day.timestamp()))
+        cur.execute(f'UPDATE order_of_wash SET day = {int(new_day.timestamp())} WHERE tg_username = "{tg_username}"')
+    db.commit()
