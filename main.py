@@ -171,6 +171,12 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
                                       day=plus_day_to_current_time(callback_data.day), tg_id=message.chat.id)
     await query.message.answer(
         f"Вы записаны {data.day_deltas[callback_data.day].lower()} {data.times[callback_data.time_index]}")
+    await query.message.answer("""Ключи в 12.4, после стирки возвращаете обратно
+1.Порошок и проч кидать внутрь
+2.Ставим не больше 800 оборотов
+3. При стирке нужно набрать вещей на объем, как пакет пятерочки(можно стираться комнатой или блоком, если не хватает)
+3.Убирать ткань из фильтра после сушки в свой мусорный пакет, и сливать воду.""")
+
     await message.delete()
     await query.answer()
 
