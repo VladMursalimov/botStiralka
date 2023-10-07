@@ -14,7 +14,8 @@ def plus_day_to_current_time(day):
 
 def get_current_hour():
     # return 13
-    return get_current_datetime().hour
+    now = datetime.datetime.now().replace(second=0, microsecond=0, minute=0)
+    return now.hour
 
 
 def get_current_week():

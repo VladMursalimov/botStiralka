@@ -48,10 +48,10 @@ async def check_user(user_id):
         return 0
 
 
-async def delete_from_order(tg_username):
+async def delete_from_order(tg_id):
     global cur, db
     await db_connect()
-    cur.execute("DELETE FROM order_of_wash WHERE tg_username = ?", (tg_username,))
+    cur.execute("DELETE FROM order_of_wash WHERE tg_id = ?", (tg_id,))
     db.commit()
 
 
@@ -85,7 +85,7 @@ async def delete_ilnaz():
 async def is_in_order(tg_id, day):
     global cur, db
     await db_connect()
-    users_un = cur.execute(f"SELECT tg_username FROM order_of_wash WHERE day >= {day}")
+    users_un = cur.execute(f"SELECT tg_id FROM order_of_wash WHERE day >= {day}")
     for un in users_un:
         if str(un[0]) == str(tg_id):
             return 1
@@ -101,19 +101,28 @@ async def get_busy_times(day: int):
     return set(busy_times)
 
 
-async def clean_time():
+# async def clean_time():
+#     global cur, db
+#     await db_connect()
+#     print("!23")
+#     records = cur.execute(
+#         f"SELECT * FROM order_of_wash").fetchall()
+#     print(order_to_string(records, ""))
+#     for row in records:
+#         tg_username, tg_name, time_index, day, tg_id = row
+#
+#         new_day = datetime.datetime.fromtimestamp(day)
+#         print(new_day, tg_username, time_index)
+#         new_day = new_day.replace(hour=0)
+#         print(int(new_day.timestamp()))
+#         cur.execute(f'UPDATE order_of_wash SET day = {int(new_day.timestamp())} WHERE tg_username = "{tg_username}"')
+#     db.commit()
+
+
+async def update_db_id():
     global cur, db
     await db_connect()
-    print("!23")
-    records = cur.execute(
-        f"SELECT * FROM order_of_wash").fetchall()
-    print(order_to_string(records, ""))
-    for row in records:
-        tg_username, tg_name, time_index, day, tg_id = row
-
-        new_day = datetime.datetime.fromtimestamp(day)
-        print(new_day, tg_username, time_index)
-        new_day = new_day.replace(hour=0)
-        print(int(new_day.timestamp()))
-        cur.execute(f'UPDATE order_of_wash SET day = {int(new_day.timestamp())} WHERE tg_username = "{tg_username}"')
+    records = cur.execute(f"SELECT tg_id, tg_username FROM users").fetchall()
+    for record in records:
+        cur.execute(f'UPDATE order_of_wash SET tg_id = {record[0]} WHERE tg_username = "{record[1]}"')
     db.commit()
