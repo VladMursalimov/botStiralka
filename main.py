@@ -191,10 +191,10 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
-    from aiogram.client.session.aiohttp import AiohttpSession
-    session = AiohttpSession(proxy="http://proxy.server:3128")
+    # from aiogram.client.session.aiohttp import AiohttpSession
+    # session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
-    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, session=None, parse_mode=ParseMode.HTML)
     await sqlite_db.clean_time()
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
