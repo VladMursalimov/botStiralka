@@ -105,7 +105,7 @@ async def print_order(message: types.Message):
             if order:
                 is_busy = True
                 await message.answer(
-                    f"{data.day_deltas[i]}\n" + order_to_string(order, message.from_user.username),
+                    f"{data.day_deltas[i]}\n" + order_to_string(order, message.from_user.id),
                     parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True)
         if not is_busy:
