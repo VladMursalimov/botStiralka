@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import os
 import sys
@@ -36,7 +37,7 @@ async def take_part_in_order(message: types.Message):
         in_order = await sqlite_db.is_in_order(message.from_user.id, get_current_day())
         # in_order = False
         if is_registred and not in_order:
-            await message.answer("выберите день", reply_markup=keybuttons.day_inline_buttons.as_markup())
+            await message.answer("выберите день", reply_markup=keybuttons.get_days_markup().as_markup())
         elif in_order:
             await message.answer("ты уже в очереди")
         else:
@@ -47,12 +48,14 @@ async def take_part_in_order(message: types.Message):
 
 @dp.callback_query(keybuttons.ChoseDayCallbackData.filter())
 async def show_free_times(query: CallbackQuery, callback_data: keybuttons.ChoseDayCallbackData):
-    busy_times = await sqlite_db.get_busy_times(plus_day_to_current_time(callback_data.day_delta))
+    chosen_day = plus_day_to_current_time(callback_data.day_delta)
+    busy_times = await sqlite_db.get_busy_times(chosen_day)
 
     busy_times = busy_times.union(get_busy_times_after_hour(busy_times))
     if callback_data.day_delta == 0:
         busy_times = busy_times.union(get_busy_times_by_hour(get_current_hour()))
-    await query.message.edit_text(f"выберите время на {data.day_deltas[callback_data.day_delta].lower()}",
+    await query.message.edit_text(f"выберите время на {data.day_deltas[callback_data.day_delta].lower()}"
+                                  f" ( {datetime.datetime.fromtimestamp(chosen_day).strftime('%d %b')} )",
                                   reply_markup=keybuttons.get_times_markup(day=callback_data.day_delta,
                                                                            busy_times=busy_times).as_markup())
     await query.answer()
@@ -190,6 +193,11 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
+    import locale
+    locale.setlocale(
+        category=locale.LC_ALL,
+        locale="Russian"  # Note: do not use "de_DE" as it doesn't work
+    )
     from aiogram.client.session.aiohttp import AiohttpSession
     session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())

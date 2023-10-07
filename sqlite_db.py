@@ -12,7 +12,7 @@ async def db_connect():
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash"
-                "(tg_username TEXT, name TEXT, time_index int, day int)")
+                "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
     db.commit()
 
 
