@@ -76,11 +76,17 @@ async def get_from_order(tg_id):
     return cur.execute("SELECT tg_username FROM order_of_wash WHERE tg_id = ?", (tg_id,))
 
 
-async def delete_ilnaz():
+async def get_users():
     global cur, db
     await db_connect()
-    cur.execute("DELETE FROM order_of_wash WHERE name = ?", ("Ильназ",))
-    db.commit()
+    return cur.execute("SELECT * FROM users").fetchall()
+
+
+# async def delete_ilnaz():
+#     global cur, db
+#     await db_connect()
+#     cur.execute("DELETE FROM order_of_wash WHERE name = ?", ("Ильназ",))
+#     db.commit()
 
 async def is_in_order(tg_id, day):
     global cur, db

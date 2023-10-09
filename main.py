@@ -18,7 +18,7 @@ from aiogram.filters import CommandStart
 
 from date_and_hours import *
 from states import GettingRoomNumber
-from strings import order_to_string
+from strings import order_to_string, get_users_to_string
 
 # Bot token can be obtained via https://t.me/BotFather
 
@@ -182,6 +182,11 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
 
     await message.delete()
     await query.answer()
+
+
+@dp.message(F.text == "все")
+async def get_users_handler(message: types.Message):
+    await message.answer(text=get_users_to_string(await sqlite_db.get_users(), message.from_user.id))
 
 
 @dp.message()
