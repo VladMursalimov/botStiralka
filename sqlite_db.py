@@ -7,7 +7,7 @@ from strings import order_to_string
 async def db_connect():
     global db, cur
 
-    db = sq.connect("new.db")
+    db = sq.connect("new (5).db")
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
@@ -80,6 +80,12 @@ async def get_users():
     global cur, db
     await db_connect()
     return cur.execute("SELECT * FROM users").fetchall()
+
+
+async def get_user_room(tg_id):
+    global cur, db
+    await db_connect()
+    return cur.execute("SELECT block FROM users WHRER tg_id = ", (tg_id,)).fetchone()
 
 
 # async def delete_ilnaz():

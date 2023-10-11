@@ -9,6 +9,9 @@ import strings
 
 async def main():
     print(strings.get_users_to_string(await sqlite_db.get_users(), 1))
+    print(strings.order_to_string(await sqlite_db.get_order(), 1))
+
+
 
 
 asyncio.run(main())
