@@ -37,6 +37,7 @@ async def take_part_in_order(message: types.Message):
         in_order = await sqlite_db.is_in_order(message.from_user.id, get_current_day())
         # in_order = False
         is_limited = await sqlite_db.is_limited(message.from_user.id, get_current_day())
+
         if is_registred and not in_order and not is_limited:
             await message.answer("выберите день", reply_markup=keybuttons.get_days_markup().as_markup())
         elif in_order:
@@ -209,8 +210,8 @@ async def main() -> None:
     from aiogram.client.session.aiohttp import AiohttpSession
     session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
-    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
-    # bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 

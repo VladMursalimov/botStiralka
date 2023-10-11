@@ -131,9 +131,12 @@ async def get_busy_times(day: int):
 async def is_limited(tg_id, day):
     global cur, db
     await db_connect()
-    n = cur.execute(f"SELECT COUNT(tg_id) FROM washed_users WHERE day >= {day - 86400 * 30} AND tg_id = {tg_id}")
-    if n > 5: return 1;
-    else: return 0;
+    cur.execute(f"SELECT COUNT(tg_id) as count FROM washed_users WHERE day >= {day - 86400} ANd tg_id = {tg_id}")
+    n = cur.fetchone()[0]
+    if n > 5:
+        return 1
+    else:
+        return 0
 
 
 
