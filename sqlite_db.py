@@ -13,6 +13,8 @@ async def db_connect():
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash"
                 "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
+    cur.execute("CREATE TABLE IF NOT EXISTS washed_users"
+                "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
     db.commit()
 
 
@@ -27,6 +29,7 @@ async def create_new_record(tg_username, user_name, time_index, day=0, tg_id=0):
     global cur, db
     await db_connect()
     cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
+    cur.execute("INSERT INTO washed_users VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
     db.commit()
 
 
@@ -129,6 +132,18 @@ async def get_busy_times(day: int):
 #         print(int(new_day.timestamp()))
 #         cur.execute(f'UPDATE order_of_wash SET day = {int(new_day.timestamp())} WHERE tg_username = "{tg_username}"')
 #     db.commit()
+
+
+async def is_limited(tg_id, day):
+    global cur, db
+    await db_connect()
+    cur.execute(f"SELECT COUNT(tg_id) as count FROM washed_users WHERE day >= {day - 86400 * 30} ANd tg_id = {tg_id}")
+    n = cur.fetchone()[0]
+    if n > 6:
+        return 1
+    else:
+        return 0
+
 
 
 async def update_db_id():

@@ -36,10 +36,14 @@ async def take_part_in_order(message: types.Message):
         is_registred = await sqlite_db.check_user(message.from_user.id)
         in_order = await sqlite_db.is_in_order(message.from_user.id, get_current_day())
         # in_order = False
-        if is_registred and not in_order:
+        is_limited = await sqlite_db.is_limited(message.from_user.id, get_current_day())
+
+        if is_registred and not in_order and not is_limited:
             await message.answer("выберите день", reply_markup=keybuttons.get_days_markup().as_markup())
         elif in_order:
             await message.answer("ты уже в очереди")
+        elif is_limited:
+            await message.answer("ты достиг лимита стирки. в месяц доступно 5 стирок")
         else:
             await message.answer("Вас нет в базе. Зарегайся")
     except TypeError:
@@ -198,8 +202,16 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
+    import locale
+    locale.setlocale(
+        category=locale.LC_ALL,
+        locale="Russian"  # Note: do not use "de_DE" as it doesn't work
+    )
+    from aiogram.client.session.aiohttp import AiohttpSession
+    session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
+    # bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 
