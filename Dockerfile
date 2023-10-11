@@ -12,6 +12,5 @@ RUN pip install aiogram
 
 COPY . .
 
-ENV bot_token=
 
 CMD [ "python", "./main.py" ]
