@@ -14,7 +14,8 @@ async def db_connect():
     cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash"
                 "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
     cur.execute("CREATE TABLE IF NOT EXISTS washed_users"
-                "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
+                "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int, id INTEGER PRIMARY KEY "
+                "AUTOINCREMENT UNIQUE NOT NULL)")
     db.commit()
 
 
