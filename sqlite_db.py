@@ -22,7 +22,10 @@ async def db_connect():
 async def add_column_tg_id_to_order_wash():
     global cur, db
     await db_connect()
-    cur.execute("ALTER TABLE order_of_wash ADD COLUMN tg_id")
+    cur.execute("DROP TABLE washed_users")
+    # cur.execute("ALTER TABLE washed_users ADD COLUMN id INTEGER PRIMARY KEY "
+    #             "AUTOINCREMENT UNIQUE NOT NULL")
+
     db.commit()
 
 
