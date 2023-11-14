@@ -55,9 +55,8 @@ async def delete_from_order(tg_id):
     global cur, db
     await db_connect()
     cur.execute("DELETE FROM order_of_wash WHERE tg_id = ?", (tg_id,))
-    cur.execute("delete from washed_users where id = ( select max(id) from washed_users )")
+    cur.execute(f"delete from washed_users WHERE tg_id = {tg_id} AND id = ( select max(id) from washed_users )")
     db.commit()
-
 
 
 
