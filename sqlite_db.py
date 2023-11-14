@@ -29,7 +29,7 @@ async def create_new_record(tg_username, user_name, time_index, day=0, tg_id=0):
     global cur, db
     await db_connect()
     cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
-    cur.execute("INSERT INTO washed_users VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
+    cur.execute("INSERT INTO washed_users VALUES (?, ?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id,None))
     db.commit()
 
 
@@ -55,7 +55,10 @@ async def delete_from_order(tg_id):
     global cur, db
     await db_connect()
     cur.execute("DELETE FROM order_of_wash WHERE tg_id = ?", (tg_id,))
+    cur.execute("delete from washed_users where id = ( select max(id) from washed_users )")
     db.commit()
+
+
 
 
 async def get_order():
@@ -131,7 +134,7 @@ async def get_busy_times(day: int):
 async def is_limited(tg_id, day):
     global cur, db
     await db_connect()
-    cur.execute(f"SELECT COUNT(tg_id) as count FROM washed_users WHERE day >= {day - 86400 * 30} ANd tg_id = {tg_id}")
+    cur.execute(f"SELECT COUNT(tg_id) as count FROM washed_users WHERE day >= {day - 86400 * 30} AND tg_id = {tg_id}")
     n = cur.fetchone()[0]
     if n > 6:
         return 1
