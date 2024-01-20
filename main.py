@@ -143,7 +143,7 @@ async def register(message: types.Message):
 async def print_order(message: types.Message):
     try:
         is_busy = False
-        for i in range(len(data.day_deltas)):
+        for i in [-1, 0, 1, 2]:
             order = await sqlite_db.get_orger_for_day(plus_day_to_current_time(i))
             if order:
                 is_busy = True
