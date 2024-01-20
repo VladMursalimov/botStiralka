@@ -274,7 +274,18 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    import locale
+    locale.setlocale(
+        category=locale.LC_ALL,
+        locale="Russian"  # Note: do not use "de_DE" as it doesn't work
+    )
+    session = None
+
+    from aiogram.client.session.aiohttp import AiohttpSession
+    session = AiohttpSession(proxy="http://proxy.server:3128")
+    print("текущее время", date_and_hours.get_current_datetime())
+
+    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 

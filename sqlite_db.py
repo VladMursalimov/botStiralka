@@ -6,8 +6,8 @@ from strings import order_to_string
 
 async def db_connect():
     global db, cur
-
-    db = sq.connect("volume/new.db")
+    path = "/home/kevin12312312/mysite/"
+    db = sq.connect(path + "new.db")
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
