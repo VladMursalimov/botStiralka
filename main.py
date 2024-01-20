@@ -25,7 +25,7 @@ from strings import order_to_string, get_users_to_string, order_to_string_with_i
 
 
 # Bot token can be obtained via https://t.me/BotFather
-TOKEN = os.getenv("bot_token")
+TOKEN = "6510101017:AAHcyY9pwbdxE8nvNnvkjRiadbJol2Y2oQA"
 router = Router()
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
