@@ -15,6 +15,30 @@ async def db_connect():
                 "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
     cur.execute("CREATE TABLE IF NOT EXISTS washed_users"
                 "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
+    cur.execute("CREATE TABLE IF NOT EXISTS banned_users"
+                "(tg_id int, day int)")
+
+    db.commit()
+
+
+async def delete_banned_user(tg_id: int):
+    global cur, db
+    await db_connect()
+    cur.execute("DELETE FROM banned_users WHERE tg_id = ?", (tg_id,))
+    db.commit()
+
+
+async def get_banned_users(tg_id: int):
+    global cur, db
+    await db_connect()
+    users_id = cur.execute("SELECT * FROM banned_users WHERE tg_id = ?", (tg_id,)).fetchall()
+    return users_id
+
+
+async def add_banned_user(tg_id: int, end_ban_time: int):
+    global cur, db
+    await db_connect()
+    cur.execute("INSERT INTO banned_users VALUES (?, ?)", (tg_id, end_ban_time))
     db.commit()
 
 
@@ -143,7 +167,6 @@ async def is_limited(tg_id, day):
         return 1
     else:
         return 0
-
 
 
 async def update_db_id():

@@ -3,6 +3,15 @@ from aiogram.utils.markdown import hlink
 import data
 
 
+def order_to_string_with_id(order):
+    strings = []
+    for row in order:
+        tg_username, tg_name, time_index, day, tg_id = row
+        strings.append(f'{tg_id} {tg_name} {data.times[time_index]} ')
+
+    return '\n'.join(strings)
+
+
 def order_to_string(order, current_user_id):
     strings = []
     for row in order:

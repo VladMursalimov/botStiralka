@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 
 import data
@@ -18,7 +19,7 @@ from aiogram.filters import CommandStart
 
 from date_and_hours import *
 from states import GettingRoomNumber
-from strings import order_to_string, get_users_to_string
+from strings import order_to_string, get_users_to_string, order_to_string_with_id
 
 # Bot token can be obtained via https://t.me/BotFather
 
@@ -28,6 +29,41 @@ TOKEN = os.getenv("bot_token")
 router = Router()
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
+
+
+@dp.message(F.from_user.id.in_({559268824, }), F.text.startswith("ban") | F.text.startswith("unban"))
+async def add_in_ban_list(message: types.Message):
+    info = message.text.split(" ")
+
+    if len(info) < 2 or not info[1].isnumeric():
+        await message.answer("неверный ввод, пример верного ввода -> ban 559268824)")
+        return
+
+    tg_id = int(info[1])
+
+    if await sqlite_db.get_banned_users(tg_id):
+        if info[0] == "ban":
+            await message.answer("этот tg_id уже в бане")
+            return
+    elif info[0] == "unban":
+        await message.answer("этот tg_id не в бане")
+        return
+
+    try:
+        chat = await message.bot.get_chat(tg_id)
+        if info[0] == "unban":
+            await message.bot.send_message(chat.id, "ты можешь пользоваться прачкой")
+        if info[0] == "ban":
+            await message.bot.send_message(chat.id, "у тебя ограничен доступ к прачке")
+
+    except TelegramBadRequest:
+        await message.answer("я не знаю такой чат")
+        return
+
+    if info[0] == "ban":
+        await sqlite_db.add_banned_user(tg_id, plus_day_to_current_time(7 * 3))
+    elif info[0] == "unban":
+        await sqlite_db.delete_banned_user(tg_id)
 
 
 @dp.message(F.text == "Запись")
@@ -103,6 +139,25 @@ async def register(message: types.Message):
         await message.answer("error register")
 
 
+@dp.message(F.text == "Очередь2")
+async def print_order(message: types.Message):
+    try:
+        is_busy = False
+        for i in range(len(data.day_deltas)):
+            order = await sqlite_db.get_orger_for_day(plus_day_to_current_time(i))
+            if order:
+                is_busy = True
+                await message.answer(
+                    f"{data.day_deltas[i]}\n" + order_to_string_with_id(order),
+                    parse_mode=ParseMode.HTML,
+                    disable_web_page_preview=True)
+        if not is_busy:
+            await message.answer("очередь пустая")
+
+    except TypeError:
+        await message.answer("error")
+
+
 @dp.message(F.text == "Очередь")
 async def print_order(message: types.Message):
     try:
@@ -169,6 +224,23 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.callback_query(keybuttons.SetTimeCallback.filter())
 async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallback):
     message = query.message
+
+    ban_list_for_current_tg_id = await sqlite_db.get_banned_users(message.chat.id)
+    print(message.chat.id)
+    print(ban_list_for_current_tg_id)
+
+    if ban_list_for_current_tg_id:
+        _, time = ban_list_for_current_tg_id[-1]
+
+        print(time, get_current_day())
+
+        if time > get_current_day():
+            await message.answer(
+                f"Тебе ограничен доступ к прачке до {datetime.datetime.fromtimestamp(time).strftime('%d %b')}")
+            return
+        else:
+            await sqlite_db.delete_banned_user(message.from_user.id)
+
     if await sqlite_db.is_in_order(message.chat.id, get_current_day()):
         await message.answer("ты уже записан")
         return None
@@ -208,5 +280,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=open("volume/logs.log", "w"))
+    # logging.basicConfig(level=logging.INFO, stream=open("volume/logs.log", "w"))
     asyncio.run(main())
