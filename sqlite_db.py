@@ -6,19 +6,35 @@ from strings import order_to_string
 
 async def db_connect():
     global db, cur
-    path = "/home/kevin12312312/mysite/"
+    # path = "/home/kevin12312312/mysite/"
+    path = ""
     db = sq.connect(path + "new.db")
     cur = db.cursor()
 
-    cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id TEXT, tg_username TEXT, block TEXT)")
+    cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id int, tg_username TEXT, block TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS order_of_wash"
                 "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
     cur.execute("CREATE TABLE IF NOT EXISTS washed_users"
-                "(tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
+                "(id INTEGER PRIMARY KEY AUTOINCREMENT, tg_username TEXT, name TEXT, time_index int, day int, tg_id int)")
     cur.execute("CREATE TABLE IF NOT EXISTS banned_users"
                 "(tg_id int, day int)")
 
     db.commit()
+
+
+async def delete_user(tg_id):
+    global cur, db
+    await db_connect()
+    cur.execute("DELETE FROM users WHERE tg_id = ?", (tg_id,))
+    db.commit()
+
+
+async def get_name_and_block_by_id(tg_id):
+    global cur, db
+    await db_connect()
+    res = cur.execute("SELECT block FROM users WHERE tg_id = ?", (tg_id,)).fetchall()
+    if res: return res[-1][0]
+    return ""
 
 
 async def delete_banned_user(tg_id: int):
@@ -53,7 +69,8 @@ async def create_new_record(tg_username, user_name, time_index, day=0, tg_id=0):
     global cur, db
     await db_connect()
     cur.execute("INSERT INTO order_of_wash VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
-    cur.execute("INSERT INTO washed_users VALUES (?, ?, ?, ?, ?)", (tg_username, user_name, time_index, day, tg_id))
+    cur.execute("INSERT INTO washed_users (tg_username, name, time_index, day, tg_id) VALUES (?, ?, ?, ?, ?)",
+                (tg_username, user_name, time_index, day, tg_id))
     db.commit()
 
 
@@ -168,7 +185,6 @@ async def is_limited(tg_id, day):
         return 1
     else:
         return 0
-
 
 
 async def update_db_id():

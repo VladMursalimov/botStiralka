@@ -6,6 +6,7 @@ import sys
 
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
+from aiogram.types.bot_command import BotCommand
 
 import data
 import date_and_hours
@@ -25,7 +26,7 @@ from strings import order_to_string, get_users_to_string, order_to_string_with_i
 
 
 # Bot token can be obtained via https://t.me/BotFather
-TOKEN = "6510101017:AAHcyY9pwbdxE8nvNnvkjRiadbJol2Y2oQA"
+TOKEN = ""
 router = Router()
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
@@ -106,19 +107,19 @@ async def register_with_room(message: types.Message, state: FSMContext):
     try:
         is_registred = await sqlite_db.check_user(message.from_user.id)
         if is_registred:
-            await message.answer("ты уже зареган")
-        else:
-            await sqlite_db.register_new_user(message.from_user.id, message.from_user.username, message.text)
-            kb = [
-                [
-                    types.KeyboardButton(text="Запись"),
-                    types.KeyboardButton(text="Очередь"),
-                    # types.KeyboardButton(text="Регистрация"),
-                    types.KeyboardButton(text="Уйти с очереди")
-                ],
-            ]
-            await message.answer("ты успешно зареган",
-                                 reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
+            await sqlite_db.delete_user(message.from_user.id)
+
+        await sqlite_db.register_new_user(message.from_user.id, message.from_user.username, message.text)
+        kb = [
+            [
+                types.KeyboardButton(text="Запись"),
+                types.KeyboardButton(text="Очередь"),
+                # types.KeyboardButton(text="Регистрация"),
+                types.KeyboardButton(text="Уйти с очереди")
+            ],
+        ]
+        await message.answer("ты успешно зареган",
+                             reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
 
     except TypeError:
         await message.answer("error register")
@@ -148,7 +149,7 @@ async def print_order(message: types.Message):
             if order:
                 is_busy = True
                 await message.answer(
-                    f"{data.day_deltas[i]}\n" + order_to_string_with_id(order),
+                    f"{data.day_deltas[i]}\n" + await order_to_string_with_id(order),
                     parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True)
         if not is_busy:
@@ -167,7 +168,7 @@ async def print_order(message: types.Message):
             if order:
                 is_busy = True
                 await message.answer(
-                    f"{data.day_deltas[i]}\n" + order_to_string(order, message.from_user.id),
+                    f"{data.day_deltas[i]}\n" + await order_to_string(order, message.from_user.id),
                     parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True)
         if not is_busy:
@@ -189,9 +190,11 @@ async def out_of_order(message: types.Message):
         await message.answer("error")
 
 
+@dp.message(F.text == "/register")
 async def ask_to_block_number(message: types.Message, state: FSMContext):
     await state.set_state(GettingRoomNumber.getting_number)
-    await message.answer("Выберите номер комнаты(например 12.4.3)")
+    await message.answer(
+        "Введите номер комнаты, фамилию и имя\n(например 12.4.3 Бебринов Бебр)\n для повторного ввода пропишите /register")
 
 
 @dp.message(F.text == "отмена")
@@ -234,12 +237,9 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
 
         print(time, get_current_day())
 
-        if time > get_current_day():
-            await message.answer(
-                f"Тебе ограничен доступ к прачке до {datetime.datetime.fromtimestamp(time).strftime('%d %b')}")
-            return
-        else:
-            await sqlite_db.delete_banned_user(message.from_user.id)
+        await message.answer(
+            f"Тебе ограничен доступ к прачке")
+        return
 
     if await sqlite_db.is_in_order(message.chat.id, get_current_day()):
         await message.answer("ты уже записан")
@@ -281,11 +281,13 @@ async def main() -> None:
     )
     session = None
 
-    from aiogram.client.session.aiohttp import AiohttpSession
-    session = AiohttpSession(proxy="http://proxy.server:3128")
+    # from aiogram.client.session.aiohttp import AiohttpSession
+    # session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
 
     bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
+    await bot.set_my_commands(commands=[BotCommand(description="показать кнопки👻", command="start"),
+                                        BotCommand(description="перерегистрация🏃‍♀️", command="register"), ])
     await dp.start_polling(bot)
     await sqlite_db.db_connect()
 
