@@ -8,7 +8,7 @@ async def db_connect():
     global db, cur
     # path = "/home/kevin12312312/mysite/"
     path = ""
-    db = sq.connect(path + "new.db")
+    db = sq.connect(path + "main.db")
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS users(tg_id int, tg_username TEXT, block TEXT)")

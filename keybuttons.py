@@ -8,6 +8,15 @@ from aiogram import types
 import data
 from date_and_hours import plus_day_to_current_time
 
+kb = [
+    [types.KeyboardButton(text="Запись")],
+    [
+        types.KeyboardButton(text="Очередь"),
+        types.KeyboardButton(text="Уйти с очереди"),
+        types.KeyboardButton(text="Санка🤫")
+
+    ],
+]
 
 class SetTimeCallback(CallbackData, prefix="set_time"):
     time_index: int
@@ -40,3 +49,5 @@ def get_days_markup():
 
     day_inline_buttons.adjust(1)
     return day_inline_buttons
+
+

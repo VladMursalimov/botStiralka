@@ -110,20 +110,22 @@ async def register_with_room(message: types.Message, state: FSMContext):
             await sqlite_db.delete_user(message.from_user.id)
 
         await sqlite_db.register_new_user(message.from_user.id, message.from_user.username, message.text)
-        kb = [
-            [
-                types.KeyboardButton(text="Запись"),
-                types.KeyboardButton(text="Очередь"),
-                # types.KeyboardButton(text="Регистрация"),
-                types.KeyboardButton(text="Уйти с очереди")
-            ],
-        ]
         await message.answer("ты успешно зареган",
-                             reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
+                             reply_markup=types.ReplyKeyboardMarkup(keyboard=keybuttons.kb, resize_keyboard=True))
 
     except TypeError:
         await message.answer("error register")
     await state.clear()
+
+
+@dp.message(F.text == "Санка🤫")
+async def sanka_alert(message: types.Message):
+    print(f"sanka_allert: message.bot.send_message by chat_id = {message.chat} cообщает о санке\n")
+    for tg_id, tg_username, block in await sqlite_db.get_users():
+        try:
+            await message.bot.send_message(tg_id, "Сообщение от Анонима: санка на 12 этаже🤫")
+        except Exception:
+            print("sanka_allert:  message.bot.send_message -> не тот айди\n")
 
 
 @dp.message(F.text == "Регистрация")
@@ -211,16 +213,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         await ask_to_block_number(message, state)
         return
 
-    kb = [
-        [
-            types.KeyboardButton(text="Запись"),
-            types.KeyboardButton(text="Очередь"),
-            # types.KeyboardButton(text="Регистрация"),
-            types.KeyboardButton(text="Уйти с очереди")
-        ],
-    ]
-
-    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    keyboard = types.ReplyKeyboardMarkup(keyboard=keybuttons.kb, resize_keyboard=True)
     await message.answer("Добро пожаловать в стиралку 12 этажа", reply_markup=keyboard)
 
 
@@ -288,8 +281,8 @@ async def main() -> None:
     bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
     await bot.set_my_commands(commands=[BotCommand(description="показать кнопки👻", command="start"),
                                         BotCommand(description="перерегистрация🏃‍♀️", command="register"), ])
+
     await dp.start_polling(bot)
-    await sqlite_db.db_connect()
 
 
 if __name__ == "__main__":
