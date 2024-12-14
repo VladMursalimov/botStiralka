@@ -253,7 +253,7 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
     await query.answer()
 
 
-@dp.message(F.text == "все")
+@dp.message(F.text == "все1")
 async def get_users_handler(message: types.Message):
     await message.answer(text=get_users_to_string(await sqlite_db.get_users(), message.from_user.id))
 
