@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 
+from aiogram.client.default import DefaultBotProperties
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types.bot_command import BotCommand
@@ -243,7 +244,7 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
                                       day=plus_day_to_current_time(callback_data.day), tg_id=message.chat.id)
     await query.message.answer(
         f"Вы записаны {data.day_deltas[callback_data.day].lower()} {data.times[callback_data.time_index]}")
-    await query.message.answer("""Ключи в 12.4, после стирки возвращаете обратно
+    await query.message.answer("""Ключи в 12.3, после стирки возвращаете обратно
 1.Порошок и проч кидать внутрь
 2.Ставим не больше 800 оборотов
 3. При стирке нужно набрать вещей на объем, как пакет пятерочки(можно стираться комнатой или блоком, если не хватает)
@@ -253,7 +254,7 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
     await query.answer()
 
 
-@dp.message(F.text == "все1")
+@dp.message(F.text == "все")
 async def get_users_handler(message: types.Message):
     await message.answer(text=get_users_to_string(await sqlite_db.get_users(), message.from_user.id))
 
