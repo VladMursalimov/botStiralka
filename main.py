@@ -1,8 +1,6 @@
 import asyncio
-import datetime
-import logging
-import os
-import sys
+from aiogram import types
+from datetime import datetime, timedelta
 
 from aiogram.client.default import DefaultBotProperties
 from aiogram.exceptions import TelegramBadRequest
@@ -20,6 +18,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 
 from date_and_hours import *
+from sqlite_db import is_in_order
 from states import GettingRoomNumber
 from strings import order_to_string, get_users_to_string, order_to_string_with_id
 
@@ -27,7 +26,7 @@ from strings import order_to_string, get_users_to_string, order_to_string_with_i
 
 
 # Bot token can be obtained via https://t.me/BotFather
-TOKEN = ""
+TOKEN = "6606812960:AAG12xeD3BIK9eAFyJTMKT7TuDiFLjMsdik"
 router = Router()
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
@@ -206,6 +205,29 @@ async def cancel(message: types.Message, state: FSMContext):
     await send_welcome(message, state)
 
 
+async def notificate(message: types.Message, time_index: int, days_ahead: int = 0):
+    await message.answer_photo("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSq6BPkDu6Hd0Z_PpgJGJ45UUrYhRHOy-TA9A&s")
+    now = datetime.datetime.now()
+    current_hour = now.hour
+
+    target_time = now.replace(hour=time_index, minute=0, second=0, microsecond=0)
+
+    if time_index < current_hour:
+        target_time += timedelta(days=1 + days_ahead)
+    else:
+        target_time += timedelta(days=days_ahead)
+
+    time_to_wait = (target_time - now).total_seconds()
+
+    print(f"Ожидание начала стирки: {time_to_wait // 3600} часов и {time_to_wait % 3600 // 60} минут")
+    await asyncio.sleep(time_to_wait)
+
+    order = is_in_order(message.from_user.id, get_current_day())
+    if (order):
+        await message.answer("Стирка началась")
+        await asyncio.sleep(3 * 3600)
+        await message.answer("Стирка окончена")
+
 @dp.message(CommandStart())
 async def send_welcome(message: types.Message, state: FSMContext):
     is_registred = await sqlite_db.check_user(message.from_user.id)
@@ -253,6 +275,8 @@ async def set_time(query: CallbackQuery, callback_data: keybuttons.SetTimeCallba
     await message.delete()
     await query.answer()
 
+    await notificate(message, callback_data.time_index, callback_data.day)
+
 
 @dp.message(F.text == "все")
 async def get_users_handler(message: types.Message):
@@ -279,7 +303,10 @@ async def main() -> None:
     # session = AiohttpSession(proxy="http://proxy.server:3128")
     print("текущее время", date_and_hours.get_current_datetime())
 
-    bot = Bot(TOKEN, session=session, parse_mode=ParseMode.HTML)
+    bot = Bot(
+        token=TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
     await bot.set_my_commands(commands=[BotCommand(description="показать кнопки👻", command="start"),
                                         BotCommand(description="перерегистрация🏃‍♀️", command="register"), ])
 
